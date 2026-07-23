@@ -15,22 +15,21 @@
     --cr:#f1e6cf;     /* кремовый (чуть состаренный) */
     --vd:#141019;     /* тёмное стекло */
   }
-  *{margin:0;padding:0;box-sizing:border-box}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{
-    background:#1c130f;display:flex;align-items:center;justify-content:center;
-    min-height:100vh;padding:20px;font-family:system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+    background:var(--cr);display:flex;align-items:center;justify-content:center;
+    min-height:100vh;min-height:100dvh;font-family:system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+    touch-action:manipulation;-webkit-user-select:none;user-select:none;overflow:hidden;
   }
   .poster{
     position:relative;
-    width:min(540px, 95vw, calc(92vh * 600 / 935));   /* влезает и по высоте (мобилка) */
-    aspect-ratio:600/935;
-    background:var(--cr);border-radius:6px;overflow:hidden;
-    box-shadow:0 30px 70px -20px rgba(40,12,8,.7),0 3px 10px rgba(40,12,8,.4);
+    width:100vw;height:100vh;height:100dvh;      /* на весь экран, без карточки */
+    background:var(--cr);overflow:hidden;
     opacity:0;animation:posterIn .8s cubic-bezier(.2,.7,.3,1) .05s forwards;
   }
-  @keyframes posterIn{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
-  .poster::before{content:"";position:absolute;inset:16px;border:1.5px solid var(--r);border-radius:3px;pointer-events:none;z-index:6;opacity:.9}
+  @keyframes posterIn{from{opacity:0;transform:translateY(16px) scale(.99)}to{opacity:1;transform:none}}
+  #tap,#flowerHit{touch-action:manipulation}
   .paper{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:.05;mix-blend-mode:multiply;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
   .vignette{position:absolute;inset:0;z-index:5;pointer-events:none;
@@ -81,7 +80,7 @@
   #daisy{opacity:0;transform-box:view-box;transform-origin:300px 448px;transform:scale(.24) rotate(-20deg);
     transition:opacity .6s ease,transform 1.25s cubic-bezier(.2,1,.3,1),filter .3s}
   .bloom #daisy{opacity:1;transform:scale(1) rotate(0deg)}
-  #daisy.hot{animation:hotpulse 2s ease-in-out infinite}
+  @media (hover:hover){ #daisy.hot{animation:hotpulse 2s ease-in-out infinite} }
   @keyframes hotpulse{0%,100%{filter:drop-shadow(0 0 4px rgba(232,72,30,.4))}50%{filter:drop-shadow(0 0 13px rgba(255,120,60,.85))}}
   .petal{transform-box:view-box;transform-origin:300px 448px;opacity:0;
     transition:opacity .5s ease var(--pd,0ms),transform .8s cubic-bezier(.5,.05,.7,.2)}
@@ -371,13 +370,7 @@
   hit.addEventListener('mouseenter',()=>daisy.classList.add('hot'));
   hit.addEventListener('mouseleave',()=>daisy.classList.remove('hot'));
 
-  // клик после финала — начать заново
-  poster.addEventListener('click',()=>{
-    if(!poster.classList.contains('ending')) return;
-    poster.classList.remove('ending');
-    poolLevel=0; pool.style.transform='scaleY(0)';
-    buildPetals();
-  });
+  // финал остаётся на экране — без рестарта по случайному тапу (перезагрузи страницу, чтобы сыграть заново)
 
   buildPetals();
 
