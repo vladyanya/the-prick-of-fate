@@ -37,6 +37,9 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
   .vignette{position:absolute;inset:0;z-index:5;pointer-events:none;
     background:radial-gradient(120% 90% at 50% 40%, rgba(0,0,0,0) 55%, rgba(30,12,8,.16) 100%)}
+  /* плёночное зерно — снимает бандинг на тёмном стекле, «дорогой» вид */
+  .grain{position:absolute;inset:0;z-index:6;pointer-events:none;opacity:.09;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
   svg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2}
 
   .red{fill:var(--r)}
@@ -44,7 +47,9 @@
   .stroke{fill:none;stroke:var(--r);stroke-width:2.4}
 
   /* заголовок */
-  #title{font-family:'Ruslan Display',serif;fill:var(--r);font-size:66px;letter-spacing:2px}
+  #title{font-family:'Ruslan Display',serif;fill:var(--r);font-size:66px;letter-spacing:2px;
+    transform-box:view-box;transform:translateY(66px);animation:titleRise .95s cubic-bezier(.2,.85,.25,1) .35s forwards}
+  @keyframes titleRise{to{transform:translateY(0)}}
 
   /* стекло */
   #void{fill:url(#glassbg)}
@@ -67,10 +72,10 @@
   #glass{mix-blend-mode:screen}
 
   /* девушка (появляется, живёт ~3с, растворяется) */
-  #girl{opacity:0;transform-box:view-box;transform-origin:300px 448px;transform:scale(1.12);
-    transition:opacity 1s ease,transform 1.3s cubic-bezier(.2,.7,.3,1)}
-  .girl #girl{opacity:1;transform:scale(1)}
-  .morph #girl{opacity:0;transform:scale(.94);transition:opacity .6s ease,transform .6s ease}
+  #girl{opacity:0;transform-box:view-box;transform-origin:300px 448px;transform:scale(1.12);filter:blur(9px);
+    transition:opacity 1s ease,transform 1.3s cubic-bezier(.2,.7,.3,1),filter 1.1s ease}
+  .girl #girl{opacity:1;transform:scale(1);filter:blur(0)}
+  .morph #girl{opacity:0;transform:scale(.94);filter:blur(6px);transition:opacity .6s ease,transform .6s ease,filter .6s ease}
   .facet{opacity:0;transition:opacity 1s ease .4s}
   .girl .facet{opacity:.5}
   .morph .facet{opacity:0}
@@ -133,6 +138,7 @@
   <div class="poster" id="poster">
     <div class="paper"></div>
     <div class="vignette"></div>
+    <div class="grain"></div>
     <svg viewBox="60 -115 480 825" id="svg">
       <defs>
         <pattern id="xstitch" width="9" height="9" patternUnits="userSpaceOnUse">
@@ -158,6 +164,12 @@
           <stop offset="62%" stop-color="#dfe6ff" stop-opacity="0"/>
         </linearGradient>
         <filter id="soft" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="3.2"/></filter>
+        <!-- gooey: капли слипаются с лужей (metaballs) -->
+        <filter id="goo" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/>
+          <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="goo"/>
+          <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+        </filter>
         <linearGradient id="bloodG" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="#e6301f"/><stop offset="12%" stop-color="#c11410"/><stop offset="100%" stop-color="#7c0b06"/>
         </linearGradient>
@@ -167,6 +179,7 @@
           <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
         <clipPath id="win"><rect x="158" y="258" width="284" height="380" rx="4"/></clipPath>
+        <clipPath id="titleClip"><rect x="66" y="-62" width="468" height="72"/></clipPath>
         <!-- мотивы -->
         <path id="drop" d="M0,0 C 8,-9 8,-24 0,-28 C -8,-24 -8,-9 0,0 Z"/>
         <path id="bd"   d="M0,0 C 7,-8 7,-22 0,-30 C -7,-22 -7,-8 0,0 Z"/>
@@ -184,15 +197,15 @@
         </g>
       </defs>
 
-      <!-- ЗАГОЛОВОК -->
-      <text id="title" x="300" y="-8" text-anchor="middle" textLength="452" lengthAdjust="spacingAndGlyphs">УКОЛ СУДЬБЫ</text>
+      <!-- ЗАГОЛОВОК (выезжает из-под линии) -->
+      <text id="title" x="300" y="-8" text-anchor="middle" textLength="452" lengthAdjust="spacingAndGlyphs" clip-path="url(#titleClip)">УКОЛ СУДЬБЫ</text>
 
       <!-- ================= СТЕКЛО ================= -->
       <rect id="void" x="158" y="258" width="284" height="380" rx="4"/>
 
       <g clip-path="url(#win)">
-        <!-- девушка за стеклом (с дисторшн-фильтром) -->
-        <g id="girl" filter="url(#wavy)">
+        <!-- девушка за стеклом (дисторшн внутри, blur-in снаружи) -->
+        <g id="girl"><g filter="url(#wavy)">
           <path fill="url(#scarf)" d="M300,512 C250,512 214,552 206,640 L394,640 C386,552 350,512 300,512 Z"/>
           <path fill="url(#skin)" d="M284,466 L316,466 L318,520 L282,520 Z"/>
           <path fill="url(#scarf)" d="M300,318 C256,318 228,352 224,410 C222,454 236,490 264,510 L300,520 L336,510 C364,490 378,454 376,410 C372,352 344,318 300,318 Z"/>
@@ -203,7 +216,7 @@
           <path class="facet" fill="#150a26" d="M300,344 L254,408 L300,430 Z" style="opacity:.14"/>
           <path class="facet" fill="#ffffff" d="M300,344 L346,408 L300,422 Z" style="opacity:.12"/>
           <path class="facet" fill="#ffffff" d="M300,492 L276,470 L324,470 Z" style="opacity:.06"/>
-        </g>
+        </g></g>
 
         <!-- УКОЛ: игла с нитью → вспышка → капля-семя -->
         <g id="needle" opacity="0">
@@ -228,9 +241,11 @@
         <!-- крупная тап-зона: весь цветок (мобилка) -->
         <circle id="flowerHit" cx="300" cy="448" r="96" fill="transparent"/>
 
-        <!-- кровь: капли + лужа -->
-        <g id="drops-layer" fill="url(#bloodG)"></g>
-        <path id="pool" fill="url(#bloodG)" d="M158,638 L442,638 L442,598 C410,610 380,594 350,604 C320,614 288,596 258,606 C228,615 196,598 158,605 Z"/>
+        <!-- кровь: капли + лужа слипаются (gooey) -->
+        <g filter="url(#goo)">
+          <path id="pool" fill="url(#bloodG)" d="M158,638 L442,638 L442,598 C410,610 380,594 350,604 C320,614 288,596 258,606 C228,615 196,598 158,605 Z"/>
+          <g id="drops-layer" fill="url(#bloodG)"></g>
+        </g>
 
         <!-- блик стекла + засасывание -->
         <!-- статичное естественное отражение (мягкий свет по углу, без полос) -->
