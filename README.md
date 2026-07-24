@@ -29,4 +29,4 @@ https://vladyanya.github.io/the-prick-of-fate/
 
 ---
 
-@vchuvst
+tg: vchuvst
